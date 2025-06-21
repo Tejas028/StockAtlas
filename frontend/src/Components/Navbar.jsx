@@ -1,42 +1,74 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Globe, ChevronDown, User, Menu, X } from 'lucide-react';
+import { AuthContext } from '../Context/authContext';
 
 const Navbar = () => {
     const navigate = useNavigate();
     const [showRegions, setShowRegions] = useState(false)
-    const [isLoggedIn, setIsLoggedIn] = useState(false) // Fixed typo: setTsLoggedIn -> setIsLoggedIn
+    const [isLoggedIn, setIsLoggedIn] = useState(false)
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [openDropDown, setOpenDropDown] = useState(false)
+
+    const { authUser, state, logout } = useContext(AuthContext)
 
     useEffect(() => {
         const handleScroll = () => {
-            setScrolled(window.scrollY > 50); // Reduced for better mobile experience
+            setScrolled(window.scrollY > 50);
         };
 
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    // Close mobile menu when clicking outside
+    // Fixed click outside handler
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (mobileMenuOpen && !event.target.closest('.mobile-menu')) {
+            // Only close if menu is open and click is outside both menu button AND mobile menu
+            if (mobileMenuOpen &&
+                !event.target.closest('.mobile-menu') &&
+                !event.target.closest('.mobile-menu-button')) {
                 setMobileMenuOpen(false);
             }
         };
 
-        document.addEventListener('click', handleClickOutside);
-        return () => document.removeEventListener('click', handleClickOutside);
+        // Add a small delay to prevent immediate closing when opening
+        if (mobileMenuOpen) {
+            const timer = setTimeout(() => {
+                document.addEventListener('click', handleClickOutside);
+            }, 100);
+
+            return () => {
+                clearTimeout(timer);
+                document.removeEventListener('click', handleClickOutside);
+            };
+        }
     }, [mobileMenuOpen]);
+
+    useEffect(() => {
+        if (authUser) {
+            setIsLoggedIn(true);
+        }
+    }, [authUser])
+
+    useEffect(() => {
+        console.log(isLoggedIn);
+
+    }, [isLoggedIn])
+
+    const toggleMobileMenu = (e) => {
+        e.stopPropagation(); // Prevent event bubbling
+        setMobileMenuOpen(!mobileMenuOpen);
+    };
 
     return (
         <div className='w-full'>
             <div className={`items-center text-white flex flex-row justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-5 fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-black/90 backdrop-blur-md shadow-lg' : 'bg-transparent'}`}>
 
                 {/* Logo/Name */}
-                <div 
-                    onClick={() => navigate('/')} 
+                <div
+                    onClick={() => navigate('/')}
                     className='font-bold text-xl sm:text-2xl lg:text-3xl cursor-pointer hover:text-gray-300 transition-colors flex-shrink-0'
                 >
                     StockAtlas
@@ -58,23 +90,23 @@ const Navbar = () => {
 
                     {/* Region Selector */}
                     <div className='relative flex flex-col items-center justify-center'>
-                        <div 
-                            onClick={() => setShowRegions(!showRegions)} 
-                            title='Select region' 
+                        <div
+                            onClick={() => setShowRegions(!showRegions)}
+                            title='Select region'
                             className='flex items-center justify-center gap-1 px-3 py-2 rounded-full hover:bg-gray-200/10 cursor-pointer transition-colors'
                         >
                             <Globe color='white' size={22} />
-                            <ChevronDown 
-                                color='white' 
-                                size={18} 
-                                className={`transform transition-transform ${showRegions ? 'rotate-180' : ''}`} 
+                            <ChevronDown
+                                color='white'
+                                size={18}
+                                className={`transform transition-transform ${showRegions ? 'rotate-180' : ''}`}
                             />
                         </div>
                         {showRegions && (
                             <div className="absolute top-full mt-2 bg-black/90 backdrop-blur-md rounded-lg shadow-xl border border-gray-600/30 overflow-hidden">
                                 <div className="py-2">
                                     {['US', 'UK', 'India', 'Japan'].map((region) => (
-                                        <div 
+                                        <div
                                             key={region}
                                             className="px-4 py-2 hover:bg-gray-600/30 cursor-pointer text-white transition-colors"
                                             onClick={() => {
@@ -91,27 +123,36 @@ const Navbar = () => {
                     </div>
 
                     {/* User Profile */}
-                    {isLoggedIn ? (
-                        <div 
-                            onClick={() => navigate('/profile')} 
-                            className='hover:bg-gray-200/10 cursor-pointer flex items-center justify-center rounded-full p-3 transition-colors'
-                        >
-                            <User size={22} />
+                    {state !== 'Sign Up' ? (
+                        <div className="relative">
+                            <div onClick={() => setOpenDropDown(true)}
+                                className='hover:bg-gray-200/10 cursor-pointer flex items-center justify-center rounded-full p-3 transition-colors'
+                            >
+                                <User size={22} />
+                                {
+                                    openDropDown
+                                        ? <div className='absolute right-0 top-full mt-3 w-48 bg-gray-200/10 backdrop-blur-sm flex flex-col rounded-xl shadow-xl border border-gray-200/30 overflow-hidden'>
+                                            <p onClick={() => navigate('/profile')} className='w-full px-6 py-3 hover:bg-gray-200/30 cursor-pointer transition-all duration-200 text-sm font-medium'>Profile</p>
+                                            <p onClick={() => navigate(logout(authUser._id))} className='w-full px-6 py-3 hover:bg-gray-200/30 cursor-pointer transition-all duration-200 text-sm font-medium border-t border-gray-200/20'>Sign Out</p>
+                                        </div>
+                                        : null
+                                }
+                            </div>
                         </div>
                     ) : (
-                        <div 
-                            onClick={() => navigate('/login')} 
+                        <div
+                            onClick={() => navigate('/login')}
                             className='hover:bg-gray-200/10 cursor-pointer flex items-center justify-center rounded-full py-2 px-4 border border-gray-200/20 hover:border-gray-200/40 transition-all text-sm lg:text-base'
                         >
-                            Sign Up
+                            Sign In
                         </div>
                     )}
                 </div>
 
-                {/* Mobile Menu Button */}
-                <div 
-                    className='flex md:hidden rounded-lg hover:bg-gray-200/10 p-2 cursor-pointer transition-colors mobile-menu flex-shrink-0'
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                {/* Mobile Menu Button - Added mobile-menu-button class */}
+                <div
+                    className='flex md:hidden rounded-lg hover:bg-gray-200/10 p-2 cursor-pointer transition-colors mobile-menu-button flex-shrink-0'
+                    onClick={toggleMobileMenu}
                 >
                     {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </div>
@@ -133,7 +174,7 @@ const Navbar = () => {
 
                         {/* Mobile Region Selector */}
                         <div className="space-y-2">
-                            <div 
+                            <div
                                 onClick={() => setShowRegions(!showRegions)}
                                 className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gray-800/50 cursor-pointer transition-colors"
                             >
@@ -141,16 +182,16 @@ const Navbar = () => {
                                     <Globe color='white' size={20} />
                                     <span className="text-white text-base font-medium">Select Region</span>
                                 </div>
-                                <ChevronDown 
-                                    color='white' 
-                                    size={18} 
-                                    className={`transform transition-transform duration-200 ${showRegions ? 'rotate-180' : ''}`} 
+                                <ChevronDown
+                                    color='white'
+                                    size={18}
+                                    className={`transform transition-transform duration-200 ${showRegions ? 'rotate-180' : ''}`}
                                 />
                             </div>
                             {showRegions && (
                                 <div className="ml-6 space-y-1 bg-gray-800/30 rounded-lg p-2">
                                     {['US', 'UK', 'India', 'Japan'].map((region) => (
-                                        <div 
+                                        <div
                                             key={region}
                                             className="px-3 py-2 rounded-lg hover:bg-gray-700/50 cursor-pointer text-gray-300 hover:text-white transition-colors text-sm"
                                             onClick={() => {
@@ -168,7 +209,7 @@ const Navbar = () => {
 
                         {/* Mobile Auth */}
                         {isLoggedIn ? (
-                            <div 
+                            <div
                                 onClick={() => {
                                     navigate('/profile');
                                     setMobileMenuOpen(false);
@@ -179,25 +220,25 @@ const Navbar = () => {
                                 <span className="text-white text-base font-medium">Profile</span>
                             </div>
                         ) : (
-                            <div 
+                            <div
                                 onClick={() => {
                                     navigate('/login');
                                     setMobileMenuOpen(false);
                                 }}
                                 className="flex items-center justify-center py-3 px-6 mt-4 rounded-xl border border-gray-500/30 hover:border-gray-400/50 hover:bg-gray-800/30 cursor-pointer transition-all"
                             >
-                                <span className="text-white text-base font-medium">Sign Up</span>
+                                <span className="text-white text-base font-medium">Sign In</span>
                             </div>
                         )}
 
                         {/* Close button at bottom for better UX */}
-                        <div className="flex-grow"></div>
-                        <div 
+                        {/* <div className="flex-grow"></div> */}
+                        {/* <div 
                             onClick={() => setMobileMenuOpen(false)}
                             className="flex items-center justify-center py-3 px-6 mb-8 rounded-xl bg-gray-800/50 hover:bg-gray-700/50 cursor-pointer transition-colors"
                         >
                             <span className="text-gray-300 text-sm">Close Menu</span>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             )}
