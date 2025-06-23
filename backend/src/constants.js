@@ -1,5 +1,5 @@
 export const DB_NAME = "StockAtlas";
 export const cookieOptions = {
-    httpOnly: false,
+    httpOnly: true,
     secure: true,
 }
