@@ -1,7 +1,21 @@
-import React from 'react'
-import { User, TrendingUp, TrendingDown, DollarSign, Clock, BarChart3, PieChart } from 'lucide-react'
+import React, { useContext, useState } from 'react'
+import { Eye, EyeOff, User, TrendingUp, TrendingDown, DollarSign, Clock, BarChart3, PieChart, Settings } from 'lucide-react'
+import { AuthContext } from '../Context/authContext'
+import validator from 'validator'
+import toast from 'react-hot-toast'
 
 const Profile = () => {
+
+  const { authUser, changePassword } = useContext(AuthContext);
+
+  const [showProfileSettings, setShowProfileSettings] = useState(false)
+  const [showOld, setShowOld] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [oldPass, setOldPass] = useState('');
+  const [newPass, setNewPass] = useState('');
+  const [confNewPass, setConfNewPass] = useState('');
+
   // Mock data - replace with actual user data
   const userData = {
     name: "John Doe",
@@ -27,6 +41,30 @@ const Profile = () => {
     { id: 4, type: "BUY", symbol: "TSLA", shares: 15, price: 255.80, date: "2024-06-05", total: 3837.00 }
   ]
 
+  const handleUpdatePassword = (e) => {
+    e.preventDefault();
+
+    const isStrongPassword = validator.isStrongPassword(newPass, {
+      minLength: 8,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1,
+    });
+
+    if (!isStrongPassword) {
+      toast.error("Enter a strong password!");
+      return false
+    }
+
+    if (newPass !== confNewPass) {
+      toast.error("Confirm New Password!");
+      return false
+    }
+
+    changePassword(oldPass, newPass);
+  }
+
   return (
     <div className="min-h-screen bg-black/90 bg-gradient-to-b from-black/80 via-black/90 to-black/95 p-6">
       <div className="max-w-7xl mx-auto">
@@ -43,12 +81,21 @@ const Profile = () => {
                 )}
               </div>
             </div>
-            
+
             {/* User Info */}
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-white mb-2">{userData.name}</h1>
-              <p className="text-gray-200 text-lg mb-4">{userData.email}</p>
-              
+              <div className=' flex flex-row justify-between'>
+                <div>
+                  <h1 className="text-3xl font-bold text-white mb-2">{authUser?.username}</h1>
+                  <p className="text-gray-200 text-lg mb-4">{authUser?.email}</p>
+                </div>
+
+                <div onClick={() => setShowProfileSettings(!showProfileSettings)} className=' group flex flex-row gap-3 items-center cursor-pointer hover:bg-white/80 px-3 my-5 rounded-xl border border-white/50 hover:border-white/80'>
+                  <Settings className=' text-white group-hover:text-black' />
+                  <p className=' text-white group-hover:text-black text-lg font-medium group-hover:transition-all group-hover:duration-200'>Change Password</p>
+                </div>
+              </div>
+
               {/* Quick Stats */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="bg-blue-600/10 backdrop-blur-sm rounded-lg p-4 border border-blue-400/20">
@@ -58,7 +105,7 @@ const Profile = () => {
                   </div>
                   <p className="text-2xl font-bold text-white">${userData.totalInvestment.toLocaleString()}</p>
                 </div>
-                
+
                 <div className="bg-green-600/10 backdrop-blur-sm rounded-lg p-4 border border-green-400/20">
                   <div className="flex items-center space-x-2">
                     <BarChart3 size={20} className="text-green-400" />
@@ -66,7 +113,7 @@ const Profile = () => {
                   </div>
                   <p className="text-2xl font-bold text-white">${userData.currentValue.toLocaleString()}</p>
                 </div>
-                
+
                 <div className={`backdrop-blur-sm rounded-lg p-4 border ${userData.profitLoss >= 0 ? 'bg-emerald-600/10 border-emerald-400/20' : 'bg-red-600/10 border-red-400/20'}`}>
                   <div className="flex items-center space-x-2">
                     {userData.profitLoss >= 0 ? (
@@ -82,7 +129,7 @@ const Profile = () => {
                     ${Math.abs(userData.profitLoss).toLocaleString()}
                   </p>
                 </div>
-                
+
                 <div className={`backdrop-blur-sm rounded-lg p-4 border ${userData.profitLossPercent >= 0 ? 'bg-emerald-600/10 border-emerald-400/20' : 'bg-red-600/10 border-red-400/20'}`}>
                   <div className="flex items-center space-x-2">
                     <PieChart size={20} className={userData.profitLossPercent >= 0 ? 'text-emerald-400' : 'text-red-400'} />
@@ -99,10 +146,113 @@ const Profile = () => {
           </div>
         </div>
 
+        {/* Change Password Section */}
+        {showProfileSettings && (
+          <div className="bg-black/40 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10 p-8 mb-6">
+            <h2 className="text-2xl font-bold text-white mb-6">Change Password</h2>
+
+            <div className="max-w-md">
+              <form onSubmit={handleUpdatePassword} className="space-y-6">
+                {/* Old Password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-200 mb-2">
+                    Old Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      value={oldPass}
+                      onChange={(e) => setOldPass(e.target.value)}
+                      type={showOld ? 'text' : 'password'}
+                      className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-200"
+                      placeholder="Enter your current password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      onClick={() => setShowOld(!showOld)}
+                    >
+                      {showOld ? (
+                        <EyeOff className="h-5 w-5 text-gray-400 hover:text-white transition-colors" />
+                      ) : (
+                        <Eye className="h-5 w-5 text-gray-400 hover:text-white transition-colors" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* New Password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-200 mb-2">
+                    New Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      value={newPass}
+                      onChange={(e) => setNewPass(e.target.value)}
+                      type={showNew ? 'text' : 'password'}
+                      className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-200"
+                      placeholder="Enter your new password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      onClick={() => setShowNew(!showNew)}
+                    >
+                      {showNew ? (
+                        <EyeOff className="h-5 w-5 text-gray-400 hover:text-white transition-colors" />
+                      ) : (
+                        <Eye className="h-5 w-5 text-gray-400 hover:text-white transition-colors" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm New Password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-200 mb-2">
+                    Confirm New Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      value={confNewPass}
+                      onChange={(e) => setConfNewPass(e.target.value)}
+                      type={showConfirm ? 'text' : 'password'}
+                      className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-200"
+                      placeholder="Confirm your new password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      onClick={() => setShowConfirm(!showConfirm)}
+                    >
+                      {showConfirm ? (
+                        <EyeOff className="h-5 w-5 text-gray-400 hover:text-white transition-colors" />
+                      ) : (
+                        <Eye className="h-5 w-5 text-gray-400 hover:text-white transition-colors" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600/20 hover:bg-blue-600/30 border border-blue-400/20 hover:border-blue-400/40 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
+                >
+                  Update Password
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
         {/* Current Portfolio */}
         <div className="bg-black/40 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10 p-8 mb-6">
           <h2 className="text-2xl font-bold text-white mb-6">Current Portfolio</h2>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -127,9 +277,8 @@ const Profile = () => {
                     <td className="py-4 px-4 text-right font-semibold text-white">
                       ${stock.value.toLocaleString()}
                     </td>
-                    <td className={`py-4 px-4 text-right font-semibold ${
-                      stock.change >= 0 ? 'text-green-400' : 'text-red-400'
-                    }`}>
+                    <td className={`py-4 px-4 text-right font-semibold ${stock.change >= 0 ? 'text-green-400' : 'text-red-400'
+                      }`}>
                       {stock.change >= 0 ? '+' : ''}{stock.change}%
                     </td>
                   </tr>
@@ -142,7 +291,7 @@ const Profile = () => {
         {/* Transaction History */}
         <div className="bg-black/40 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10 p-8">
           <h2 className="text-2xl font-bold text-white mb-6">Transaction History</h2>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -165,11 +314,10 @@ const Profile = () => {
                       </div>
                     </td>
                     <td className="py-4 px-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        transaction.type === 'BUY' 
-                          ? 'bg-green-600/20 text-green-300 border border-green-400/20' 
-                          : 'bg-red-600/20 text-red-300 border border-red-400/20'
-                      }`}>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${transaction.type === 'BUY'
+                        ? 'bg-green-600/20 text-green-300 border border-green-400/20'
+                        : 'bg-red-600/20 text-red-300 border border-red-400/20'
+                        }`}>
                         {transaction.type}
                       </span>
                     </td>
