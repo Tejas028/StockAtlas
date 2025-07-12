@@ -5,6 +5,7 @@ import validator from 'validator'
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL
 axios.defaults.baseURL = backendUrl
+axios.defaults.withCredentials = true;
 
 export const AuthContext = createContext();
 
@@ -12,6 +13,7 @@ export const AuthProvider = ({ children }) => {
 
     const [authUser, setAuthUser] = useState(null)
     const [state, setState] = useState('Sign Up')
+    const [accessToken, setAccessToken] = useState(null)
 
     const register = async (credentials) => {
         try {
@@ -31,7 +33,8 @@ export const AuthProvider = ({ children }) => {
                 minNumbers: 1,
                 minSymbols: 1,
             });
-            if(!isStrongPassword){
+
+            if (!isStrongPassword) {
                 toast.error("Enter a strong password!");
                 return false
             }
@@ -65,6 +68,7 @@ export const AuthProvider = ({ children }) => {
                 setAuthUser(loggedInUser)
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', refreshToken);
+                setAccessToken(accessToken)
 
                 return true;
             } else {
@@ -105,6 +109,105 @@ export const AuthProvider = ({ children }) => {
         }
     }
 
+    const refreshAccessToken = async () => {
+        try {
+            const response = await axios.post('/api/v1/users/refresh-token',
+                { refreshToken: localStorage.getItem('refreshToken') }
+            );
+
+            const { accessToken } = response.data.data;
+
+            localStorage.setItem("accessToken", accessToken);
+            setAccessToken(accessToken); // <- triggers getUser via useEffect if needed
+            return true;
+        } catch (error) {
+            const message = error.response?.data?.message || error.message;
+            toast.error("Session expired. Please login again.");
+            return false;
+        }
+    };
+
+    const changePassword = async (oldPassword, newPassword) => {
+        try {
+            const response=await axios.post('/api/v1/users/change-password',{oldPassword, newPassword}, {withCredentials: true});
+
+            if (response.data.success) {
+                toast.success("Password changed successfully");
+                // setAuthUser(response.data.data)
+
+                return true;
+            } else {
+                toast.error(response.data.message || "Password Updation failed");
+                return false;
+            }
+
+        } catch (error) {
+            const message = error.response?.data?.message || error.message;
+            toast.error(message);
+            return false;
+        }
+    }
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const token = localStorage.getItem("accessToken");
+            console.log("Fetched token on reload:", token);
+            if (!token) return;
+
+            try {
+                const response = await axios.get("/api/v1/users/MyProfile", {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (response.data.success) {
+                    console.log(response.data.data);
+                    setAuthUser(response.data.data);
+                    setAccessToken(token);
+                    setState("Sign In");
+                }
+            } catch (err) {
+                if (err.response?.status === 401) {
+                    console.warn("Access token expired. Trying refresh...");
+
+                    const success = await refreshAccessToken();
+                    if (success) {
+                        // Retry fetching user after successful refresh
+                        const retryToken = localStorage.getItem("accessToken");
+
+                        try {
+                            const retryRes = await axios.get("/api/v1/users/MyProfile", {
+                                headers: {
+                                    Authorization: `Bearer ${retryToken}`,
+                                },
+                            });
+
+                            if (retryRes.data.success) {
+                                setAuthUser(retryRes.data.data);
+                                setAccessToken(retryToken);
+                                setState("Sign In");
+                                return;
+                            }
+                        } catch (retryErr) {
+                            console.error("Retry failed after refresh:", retryErr.message);
+                        }
+                    }
+                }
+
+                // If everything fails, log out
+                console.error("User restore failed:", err.response?.data?.message || err.message);
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("refreshToken");
+                setAuthUser(null);
+                setAccessToken(null);
+            }
+        };
+
+        fetchUser();
+    }, []);
+
+
     useEffect(() => {
         console.log(authUser);
     }, [authUser])
@@ -113,7 +216,7 @@ export const AuthProvider = ({ children }) => {
         register,
         state, setState,
         login, authUser,
-        logout
+        logout, changePassword
     }
 
     return (
