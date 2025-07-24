@@ -1,6 +1,10 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const Footer = () => {
+
+  const navigate=useNavigate();
+
   return (
     <div className='bg-gray-950 text-white pb-20'>
       <hr className="border-gray-700 border-t py-8" />
@@ -16,34 +20,36 @@ const Footer = () => {
         </div>
         {/* About Us */}
         <div className='flex flex-col gap-3'>
-          <h1 className='text-lg font-medium'>About Us</h1>
-          <div>
-            
+          <h1 className='text-lg font-medium cursor-pointer' onClick={()=>{navigate('/about'); scrollTo(0,0)}}>About Us</h1>
+          <div className='text-base font-extralight flex flex-col gap-1'>
+            <p>Our Mission</p>
+            <p>Our Visison</p>
+            <p>Core Values</p>
           </div>
         </div>
         {/* Meet the Developers */}
         <div className='flex flex-col gap-3'>
-          <h1 className='text-lg font-medium'>Meet the Developers</h1>
-          <div className='text-base font-extralight flex flex-col gap-1'>
-            <a className='hover:text-blue-500 transition-colors duration-200' href="https://www.linkedin.com/in/tejas-geria/" target='_blank' rel='noopener noreferrer'>Tejas Geria - Frontend Developer</a>
-            <a className='hover:text-blue-500 transition-colors duration-200' href="https://www.linkedin.com/in/monish-patel-a594462b8/" target='_blank' rel='noopener noreferrer'>Monish Patel - Backend Developer</a>
+          <h1 onClick={()=>{navigate('/meet-the-developers',{state:{initTab:'all'}}); scrollTo(0,0)}} className='text-lg font-medium cursor-pointer'>Meet the Developers</h1>
+          <div className='text-base font-extralight flex flex-col gap-1 cursor-pointer'>
+            <p onClick={()=>{navigate('/meet-the-developers',{state:{initTab:'frontend'}}); scrollTo(0,0)}} className='hover:text-blue-500 transition-colors duration-200 cursor-pointer'>Tejas Geria - Frontend Developer</p>
+            <p onClick={()=>{navigate('/meet-the-developers',{state:{initTab:'backend'}}); scrollTo(0,0)}} className='hover:text-blue-500 transition-colors duration-200'>Monish Patel - Backend Developer</p>
           </div>
         </div>
         {/* Contact */}
         <div className='flex flex-col gap-3'>
           <h1 className='text-lg font-medium'>Contact Us</h1>
           <div className='text-base font-extralight flex flex-col gap-1'>
-            <p className='cursor-pointer hover:text-blue-500 transition-colors duration-200'>support@stockatlas.app</p>
+            <p className='cursor-pointer hover:text-blue-500 transition-colors duration-200' >support@stockatlas.app</p>
             <p className='cursor-pointer hover:text-blue-500 transition-colors duration-200'>Feedback</p>
           </div>
         </div>
         {/* Privacy Policy */}
         <div className='flex flex-col gap-3 justify-center'>
-          <h1 className='text-lg font-medium'>Policies & Security</h1>
+          <h1 className='text-lg font-medium cursor-pointer' onClick={()=>{navigate('/policies', {state:{initTab: 'terms'}}); scrollTo(0,0)}}>Policies & Security</h1>
           <div className='text-base font-extralight flex flex-col gap-1'>
-            <p className='cursor-pointer hover:text-blue-500 hover:font-normal transition-colors duration-200'>Terms of Use</p>
-            <p className='cursor-pointer hover:text-blue-500 hover:font-normal transition-colors duration-200'>Disclaimer</p>
-            <p className='cursor-pointer hover:text-blue-500 hover:font-normal transition-colors duration-200'>Privacy Policy</p>
+            <p onClick={()=>{navigate('/policies', {state:{initTab: 'terms'}}); scrollTo(0,0)}} className='cursor-pointer hover:text-blue-500 hover:font-normal transition-colors duration-200'>Terms of Use</p>
+            <p onClick={()=>{navigate('/policies', {state:{initTab: 'disclaimer'}}); scrollTo(0,0)}} className='cursor-pointer hover:text-blue-500 hover:font-normal transition-colors duration-200'>Disclaimer</p>
+            <p onClick={()=>{navigate('/policies', {state:{initTab: 'privacy'}}); scrollTo(0,0)}} className='cursor-pointer hover:text-blue-500 hover:font-normal transition-colors duration-200'>Privacy Policy</p>
           </div>
         </div>
 
