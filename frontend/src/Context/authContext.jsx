@@ -15,15 +15,20 @@ export const AuthProvider = ({ children }) => {
     const [state, setState] = useState('Sign Up')
     const [accessToken, setAccessToken] = useState(null)
 
-    const register = async (credentials) => {
+    const register = async (formData) => {
         try {
+            const username = formData.get("username");
+            const email = formData.get("email");
+            const password = formData.get("password");
 
-            const { username, email, password } = credentials;
+            console.log("username:", username);
+            console.log("email:", email);
+            console.log("password:", password);
 
             const isEmail = validator.isEmail(email);
             if (!isEmail) {
                 toast.error("Enter a valid email!");
-                return false
+                return false;
             }
 
             const isStrongPassword = validator.isStrongPassword(password, {
@@ -36,15 +41,16 @@ export const AuthProvider = ({ children }) => {
 
             if (!isStrongPassword) {
                 toast.error("Enter a strong password!");
-                return false
+                return false;
             }
 
-            const response = await axios.post('/api/v1/users/register', credentials);
+            const response = await axios.post('/api/v1/users/register', formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
 
             if (response.data.success) {
                 toast.success("User registered successfully");
-                setAuthUser(response.data.data)
-
+                setAuthUser(response.data.data);
                 return true;
             } else {
                 toast.error(response.data.message || "Registration failed");
@@ -56,6 +62,7 @@ export const AuthProvider = ({ children }) => {
             return false;
         }
     };
+
 
     const login = async (credentials) => {
         try {
@@ -129,7 +136,7 @@ export const AuthProvider = ({ children }) => {
 
     const changePassword = async (oldPassword, newPassword) => {
         try {
-            const response=await axios.post('/api/v1/users/change-password',{oldPassword, newPassword}, {withCredentials: true});
+            const response = await axios.post('/api/v1/users/change-password', { oldPassword, newPassword }, { withCredentials: true });
 
             if (response.data.success) {
                 toast.success("Password changed successfully");
