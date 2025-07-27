@@ -7,6 +7,8 @@ import About from './Pages/About'
 import {Toaster} from 'react-hot-toast'
 import PoliciesAndSecurity from './Pages/PoliciesAndSecurity'
 import MeetTheDevelopers from './Pages/MeetTheDevelopers'
+import Stock from './Pages/Stock'
+import CompanyProfile from './Components/CompanyProfile'
 
 const App = () => {
   return (
@@ -19,6 +21,8 @@ const App = () => {
         <Route path='/about' element={<About/>}></Route>
         <Route path='/policies' element={<PoliciesAndSecurity/>}></Route>
         <Route path='/meet-the-developers' element={<MeetTheDevelopers/>}></Route>
+        <Route path='/stock/:symbol' element={<Stock/>}></Route>
+        <Route path='/company/:symbol' element={<CompanyProfile/>}></Route>
       </Routes>
     </div>
   )

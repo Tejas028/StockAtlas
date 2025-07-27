@@ -2,8 +2,8 @@ import React from 'react'
 import Navbar from '../Components/Navbar'
 import { Typewriter } from 'react-simple-typewriter'
 import { useNavigate } from 'react-router-dom'
-import GlobalMarkets from '../Components/GlobalMarkets'
 import Footer from '../Components/Footer'
+import MarketNews from '../Components/MarketNews'
 
 const Home = () => {
 
@@ -61,7 +61,7 @@ const Home = () => {
       </div>
 
       {/* Add some content below the hero for scroll testing */}
-      <GlobalMarkets/>
+      <MarketNews/>
 
       <Footer/>
 

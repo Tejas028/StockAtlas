@@ -1,12 +1,16 @@
 import React, { useContext, useState } from 'react'
-import { Eye, EyeOff, User, TrendingUp, TrendingDown, DollarSign, Clock, BarChart3, PieChart, Settings } from 'lucide-react'
+import { Eye, EyeOff, User, TrendingUp, TrendingDown, DollarSign, Clock, BarChart3, PieChart, Settings, ArrowLeft, Home } from 'lucide-react'
 import { AuthContext } from '../Context/authContext'
 import validator from 'validator'
 import toast from 'react-hot-toast'
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const Profile = () => {
 
   const { authUser, changePassword } = useContext(AuthContext);
+
+  const navigate=useNavigate();
 
   const [showProfileSettings, setShowProfileSettings] = useState(false)
   const [showOld, setShowOld] = useState(false);
@@ -18,9 +22,9 @@ const Profile = () => {
 
   // Mock data - replace with actual user data
   const userData = {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    avatar: null, // Set to image URL when available
+    name: authUser.username,
+    email: authUser.email,
+    avatar: authUser.avatar, // Set to image URL when available
     totalInvestment: 25000,
     currentValue: 28750,
     profitLoss: 3750,
@@ -65,63 +69,106 @@ const Profile = () => {
     changePassword(oldPass, newPass);
   }
 
+  useEffect(()=>{
+    if(authUser) console.log(authUser);
+    
+  },[])
+
   return (
-    <div className="min-h-screen bg-black/90 bg-gradient-to-b from-black/80 via-black/90 to-black/95 p-6">
+    <div className="min-h-screen bg-gray-950 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Navigation Header */}
+        <div className="mb-8 flex items-center justify-between">
+          <button
+            onClick={()=>{navigate('/'); scrollTo(0,0)}}
+            className="group flex items-center space-x-3 bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-full px-6 py-3 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25"
+          >
+            <ArrowLeft size={20} className="text-white group-hover:text-blue-400 transition-colors" />
+            <Home size={20} className="text-white group-hover:text-blue-400 transition-colors" />
+            <span className="text-white font-medium group-hover:text-blue-400 transition-colors">
+              Back to Home
+            </span>
+          </button>
+          
+          <div className="text-right">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">
+              Portfolio Dashboard
+            </h1>
+            <p className="text-gray-400 mt-1">Manage your investments</p>
+          </div>
+        </div>
+
         {/* Profile Header */}
-        <div className="bg-black/40 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10 p-8 mb-6">
-          <div className="flex items-start space-x-6">
+        <div className="bg-gray-900 rounded-2xl shadow-xl border border-gray-800 p-6 sm:p-8 mb-8 hover:shadow-blue-500/10 transition-all duration-300">
+          <div className="flex flex-col lg:flex-row items-start space-y-6 lg:space-y-0 lg:space-x-8">
             {/* User Avatar */}
-            <div className="flex-shrink-0">
-              <div className="w-24 h-24 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center overflow-hidden border-2 border-white/20">
+            <div className="flex-shrink-0 mx-auto lg:mx-0">
+              <div className="w-28 h-28 bg-gray-800 rounded-full flex items-center justify-center overflow-hidden border-2 border-gray-700 shadow-lg hover:scale-105 transition-transform duration-300">
                 {userData.avatar ? (
                   <img src={userData.avatar} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <User size={40} className="text-white/70" />
+                  <User size={48} className="text-white/80" />
                 )}
               </div>
             </div>
 
             {/* User Info */}
-            <div className="flex-1">
-              <div className=' flex flex-row justify-between'>
-                <div>
-                  <h1 className="text-3xl font-bold text-white mb-2">{authUser?.username}</h1>
-                  <p className="text-gray-200 text-lg mb-4">{authUser?.email}</p>
+            <div className="flex-1 w-full">
+              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-4 lg:space-y-0">
+                <div className="text-center lg:text-left">
+                  <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2">
+                    {authUser?.username || "John Doe"}
+                  </h2>
+                  <p className="text-gray-400 text-lg">{authUser?.email || "john.doe@example.com"}</p>
                 </div>
 
-                <div onClick={() => setShowProfileSettings(!showProfileSettings)} className=' group flex flex-row gap-3 items-center cursor-pointer hover:bg-white/80 px-3 my-5 rounded-xl border border-white/50 hover:border-white/80'>
-                  <Settings className=' text-white group-hover:text-black' />
-                  <p className=' text-white group-hover:text-black text-lg font-medium group-hover:transition-all group-hover:duration-200'>Change Password</p>
-                </div>
+                <button
+                  onClick={() => setShowProfileSettings(!showProfileSettings)}
+                  className="group flex items-center space-x-3 bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg border border-blue-500 hover:border-blue-400 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25"
+                >
+                  <Settings className="text-white transition-colors" size={20} />
+                  <span className="text-white font-medium transition-colors">
+                    Change Password
+                  </span>
+                </button>
               </div>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-blue-600/10 backdrop-blur-sm rounded-lg p-4 border border-blue-400/20">
-                  <div className="flex items-center space-x-2">
-                    <DollarSign size={20} className="text-blue-400" />
-                    <span className="text-sm font-medium text-blue-300">Total Investment</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mt-8">
+                <div className="bg-blue-600/20 rounded-lg p-5 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="p-2 bg-blue-600/30 rounded-lg">
+                      <DollarSign size={20} className="text-blue-400" />
+                    </div>
+                    <span className="text-sm font-semibold text-blue-300">Total Investment</span>
                   </div>
                   <p className="text-2xl font-bold text-white">${userData.totalInvestment.toLocaleString()}</p>
                 </div>
 
-                <div className="bg-green-600/10 backdrop-blur-sm rounded-lg p-4 border border-green-400/20">
-                  <div className="flex items-center space-x-2">
-                    <BarChart3 size={20} className="text-green-400" />
-                    <span className="text-sm font-medium text-green-300">Current Value</span>
+                <div className="bg-green-600/20 rounded-lg p-5 border border-green-500/30 hover:border-green-400/50 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-green-500/25">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="p-2 bg-green-600/30 rounded-lg">
+                      <BarChart3 size={20} className="text-green-400" />
+                    </div>
+                    <span className="text-sm font-semibold text-green-300">Current Value</span>
                   </div>
                   <p className="text-2xl font-bold text-white">${userData.currentValue.toLocaleString()}</p>
                 </div>
 
-                <div className={`backdrop-blur-sm rounded-lg p-4 border ${userData.profitLoss >= 0 ? 'bg-emerald-600/10 border-emerald-400/20' : 'bg-red-600/10 border-red-400/20'}`}>
-                  <div className="flex items-center space-x-2">
-                    {userData.profitLoss >= 0 ? (
-                      <TrendingUp size={20} className="text-emerald-400" />
-                    ) : (
-                      <TrendingDown size={20} className="text-red-400" />
-                    )}
-                    <span className={`text-sm font-medium ${userData.profitLoss >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                <div className={`rounded-lg p-5 border transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+                  userData.profitLoss >= 0 
+                    ? 'bg-emerald-600/20 border-emerald-500/30 hover:border-emerald-400/50 hover:shadow-emerald-500/25' 
+                    : 'bg-red-600/20 border-red-500/30 hover:border-red-400/50 hover:shadow-red-500/25'
+                }`}>
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className={`p-2 rounded-lg ${userData.profitLoss >= 0 ? 'bg-emerald-600/30' : 'bg-red-600/30'}`}>
+                      {userData.profitLoss >= 0 ? (
+                        <TrendingUp size={20} className="text-emerald-400" />
+                      ) : (
+                        <TrendingDown size={20} className="text-red-400" />
+                      )}
+                    </div>
+                    <span className={`text-sm font-semibold ${userData.profitLoss >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
                       Profit/Loss
                     </span>
                   </div>
@@ -130,10 +177,16 @@ const Profile = () => {
                   </p>
                 </div>
 
-                <div className={`backdrop-blur-sm rounded-lg p-4 border ${userData.profitLossPercent >= 0 ? 'bg-emerald-600/10 border-emerald-400/20' : 'bg-red-600/10 border-red-400/20'}`}>
-                  <div className="flex items-center space-x-2">
-                    <PieChart size={20} className={userData.profitLossPercent >= 0 ? 'text-emerald-400' : 'text-red-400'} />
-                    <span className={`text-sm font-medium ${userData.profitLossPercent >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                <div className={`rounded-lg p-5 border transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+                  userData.profitLossPercent >= 0 
+                    ? 'bg-emerald-600/20 border-emerald-500/30 hover:border-emerald-400/50 hover:shadow-emerald-500/25' 
+                    : 'bg-red-600/20 border-red-500/30 hover:border-red-400/50 hover:shadow-red-500/25'
+                }`}>
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className={`p-2 rounded-lg ${userData.profitLossPercent >= 0 ? 'bg-emerald-600/30' : 'bg-red-600/30'}`}>
+                      <PieChart size={20} className={userData.profitLossPercent >= 0 ? 'text-emerald-400' : 'text-red-400'} />
+                    </div>
+                    <span className={`text-sm font-semibold ${userData.profitLossPercent >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
                       Return %
                     </span>
                   </div>
@@ -148,28 +201,30 @@ const Profile = () => {
 
         {/* Change Password Section */}
         {showProfileSettings && (
-          <div className="bg-black/40 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10 p-8 mb-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Change Password</h2>
+          <div className="bg-gray-900 rounded-2xl shadow-xl border border-gray-800 p-6 sm:p-8 mb-8 animate-in slide-in-from-top duration-300">
+            <h3 className="text-2xl font-bold text-white mb-8">
+              Change Password
+            </h3>
 
-            <div className="max-w-md">
-              <form onSubmit={handleUpdatePassword} className="space-y-6">
+            <div className="max-w-md mx-auto">
+              <div className="space-y-6">
                 {/* Old Password */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-200 mb-2">
-                    Old Password
+                  <label className="block text-sm font-semibold text-gray-300 mb-3">
+                    Current Password
                   </label>
                   <div className="relative">
                     <input
                       value={oldPass}
                       onChange={(e) => setOldPass(e.target.value)}
                       type={showOld ? 'text' : 'password'}
-                      className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-200"
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:bg-gray-700"
                       placeholder="Enter your current password"
                       required
                     />
                     <button
                       type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center"
                       onClick={() => setShowOld(!showOld)}
                     >
                       {showOld ? (
@@ -183,7 +238,7 @@ const Profile = () => {
 
                 {/* New Password */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-200 mb-2">
+                  <label className="block text-sm font-semibold text-gray-300 mb-3">
                     New Password
                   </label>
                   <div className="relative">
@@ -191,13 +246,13 @@ const Profile = () => {
                       value={newPass}
                       onChange={(e) => setNewPass(e.target.value)}
                       type={showNew ? 'text' : 'password'}
-                      className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-200"
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:bg-gray-700"
                       placeholder="Enter your new password"
                       required
                     />
                     <button
                       type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center"
                       onClick={() => setShowNew(!showNew)}
                     >
                       {showNew ? (
@@ -211,7 +266,7 @@ const Profile = () => {
 
                 {/* Confirm New Password */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-200 mb-2">
+                  <label className="block text-sm font-semibold text-gray-300 mb-3">
                     Confirm New Password
                   </label>
                   <div className="relative">
@@ -219,13 +274,13 @@ const Profile = () => {
                       value={confNewPass}
                       onChange={(e) => setConfNewPass(e.target.value)}
                       type={showConfirm ? 'text' : 'password'}
-                      className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-200"
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:bg-gray-700"
                       placeholder="Confirm your new password"
                       required
                     />
                     <button
                       type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center"
                       onClick={() => setShowConfirm(!showConfirm)}
                     >
                       {showConfirm ? (
@@ -239,45 +294,47 @@ const Profile = () => {
 
                 {/* Submit Button */}
                 <button
-                  type="submit"
-                  className="w-full bg-blue-600/20 hover:bg-blue-600/30 border border-blue-400/20 hover:border-blue-400/40 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
+                  onClick={handleUpdatePassword}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25"
                 >
                   Update Password
                 </button>
-              </form>
+              </div>
             </div>
           </div>
         )}
 
         {/* Current Portfolio */}
-        <div className="bg-black/40 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10 p-8 mb-6">
-          <h2 className="text-2xl font-bold text-white mb-6">Current Portfolio</h2>
+        <div className="bg-gray-900 rounded-2xl shadow-xl border border-gray-800 p-6 sm:p-8 mb-8">
+          <h3 className="text-2xl font-bold text-white mb-8">
+            Current Portfolio
+          </h3>
 
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-200">Symbol</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-200">Company</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-200">Shares</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-200">Price</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-200">Value</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-200">Change</th>
+                <tr className="border-b border-gray-800">
+                  <th className="text-left py-4 px-4 font-semibold text-gray-300">Symbol</th>
+                  <th className="text-left py-4 px-4 font-semibold text-gray-300">Company</th>
+                  <th className="text-right py-4 px-4 font-semibold text-gray-300">Shares</th>
+                  <th className="text-right py-4 px-4 font-semibold text-gray-300">Price</th>
+                  <th className="text-right py-4 px-4 font-semibold text-gray-300">Value</th>
+                  <th className="text-right py-4 px-4 font-semibold text-gray-300">Change</th>
                 </tr>
               </thead>
               <tbody>
                 {currentStocks.map((stock, index) => (
-                  <tr key={index} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="py-4 px-4">
-                      <span className="font-bold text-white">{stock.symbol}</span>
+                  <tr key={index} className="border-b border-gray-800 hover:bg-gray-800/50 transition-all duration-200 hover:scale-[1.01]">
+                    <td className="py-5 px-4">
+                      <span className="font-bold text-white text-lg">{stock.symbol}</span>
                     </td>
-                    <td className="py-4 px-4 text-gray-200">{stock.name}</td>
-                    <td className="py-4 px-4 text-right text-white">{stock.shares}</td>
-                    <td className="py-4 px-4 text-right text-white">${stock.price}</td>
-                    <td className="py-4 px-4 text-right font-semibold text-white">
+                    <td className="py-5 px-4 text-gray-300">{stock.name}</td>
+                    <td className="py-5 px-4 text-right text-white font-medium">{stock.shares}</td>
+                    <td className="py-5 px-4 text-right text-white font-medium">${stock.price}</td>
+                    <td className="py-5 px-4 text-right font-bold text-white">
                       ${stock.value.toLocaleString()}
                     </td>
-                    <td className={`py-4 px-4 text-right font-semibold ${stock.change >= 0 ? 'text-green-400' : 'text-red-400'
+                    <td className={`py-5 px-4 text-right font-bold ${stock.change >= 0 ? 'text-green-400' : 'text-red-400'
                       }`}>
                       {stock.change >= 0 ? '+' : ''}{stock.change}%
                     </td>
@@ -289,42 +346,44 @@ const Profile = () => {
         </div>
 
         {/* Transaction History */}
-        <div className="bg-black/40 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10 p-8">
-          <h2 className="text-2xl font-bold text-white mb-6">Transaction History</h2>
+        <div className="bg-gray-900 rounded-2xl shadow-xl border border-gray-800 p-6 sm:p-8">
+          <h3 className="text-2xl font-bold text-white mb-8">
+            Transaction History
+          </h3>
 
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-200">Date</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-200">Type</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-200">Symbol</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-200">Shares</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-200">Price</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-200">Total</th>
+                <tr className="border-b border-gray-800">
+                  <th className="text-left py-4 px-4 font-semibold text-gray-300">Date</th>
+                  <th className="text-left py-4 px-4 font-semibold text-gray-300">Type</th>
+                  <th className="text-left py-4 px-4 font-semibold text-gray-300">Symbol</th>
+                  <th className="text-right py-4 px-4 font-semibold text-gray-300">Shares</th>
+                  <th className="text-right py-4 px-4 font-semibold text-gray-300">Price</th>
+                  <th className="text-right py-4 px-4 font-semibold text-gray-300">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {transactionHistory.map((transaction) => (
-                  <tr key={transaction.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="py-4 px-4 text-gray-200">
+                  <tr key={transaction.id} className="border-b border-white/10 hover:bg-white/5 transition-all duration-200 hover:scale-[1.01]">
+                    <td className="py-5 px-4 text-gray-200">
                       <div className="flex items-center space-x-2">
                         <Clock size={16} className="text-gray-400" />
                         <span>{new Date(transaction.date).toLocaleDateString()}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${transaction.type === 'BUY'
-                        ? 'bg-green-600/20 text-green-300 border border-green-400/20'
-                        : 'bg-red-600/20 text-red-300 border border-red-400/20'
+                    <td className="py-5 px-4">
+                      <span className={`px-4 py-2 rounded-full text-xs font-bold border ${transaction.type === 'BUY'
+                        ? 'bg-green-600/20 text-green-300 border-green-400/30'
+                        : 'bg-red-600/20 text-red-300 border-red-400/30'
                         }`}>
                         {transaction.type}
                       </span>
                     </td>
-                    <td className="py-4 px-4 font-bold text-white">{transaction.symbol}</td>
-                    <td className="py-4 px-4 text-right text-white">{transaction.shares}</td>
-                    <td className="py-4 px-4 text-right text-white">${transaction.price}</td>
-                    <td className="py-4 px-4 text-right font-semibold text-white">
+                    <td className="py-5 px-4 font-bold text-white text-lg">{transaction.symbol}</td>
+                    <td className="py-5 px-4 text-right text-white font-medium">{transaction.shares}</td>
+                    <td className="py-5 px-4 text-right text-white font-medium">${transaction.price}</td>
+                    <td className="py-5 px-4 text-right font-bold text-white">
                       ${transaction.total.toLocaleString()}
                     </td>
                   </tr>
