@@ -63,7 +63,6 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-
     const login = async (credentials) => {
         try {
             const response = await axios.post('/api/v1/users/login', credentials);
@@ -158,7 +157,7 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const fetchUser = async () => {
             const token = localStorage.getItem("accessToken");
-            console.log("Fetched token on reload:", token);
+            // console.log("Fetched token on reload:", token);
             if (!token) return;
 
             try {
@@ -169,7 +168,7 @@ export const AuthProvider = ({ children }) => {
                 });
 
                 if (response.data.success) {
-                    console.log(response.data.data);
+                    // console.log(response.data.data);
                     setAuthUser(response.data.data);
                     setAccessToken(token);
                     setState("Sign In");
@@ -216,7 +215,7 @@ export const AuthProvider = ({ children }) => {
 
 
     useEffect(() => {
-        console.log(authUser);
+        // console.log(authUser);
     }, [authUser])
 
     const value = {

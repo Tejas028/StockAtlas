@@ -12,14 +12,23 @@ const Navbar = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [openDropDown, setOpenDropDown] = useState(false)
     const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState(null);
+    const [mobileSearchQuery, setMobileSearchQuery] = useState('');
+    const [mobileSearchResults, setMobileSearchResults] = useState(null);
 
     // Refs for click outside detection
     const regionsRef = useRef(null);
     const profileDropdownRef = useRef(null);
     const mobileMenuRef = useRef(null);
+    const searchDropdownRef = useRef(null);
+    const mobileSearchDropdownRef = useRef(null);
 
     const { authUser, state, logout } = useContext(AuthContext)
-    const { searchStock } = useContext(StockContext)
+    const { searchStock, getMarketNews } = useContext(StockContext)
+
+    const handleSearchInputClick=()=>{
+        window.open('https://stockanalysis.com/stocks/')
+    }
 
     // Debounced scroll handler for better performance
     useEffect(() => {
@@ -56,6 +65,16 @@ const Navbar = () => {
                 !event.target.closest('.mobile-menu-button')) {
                 setMobileMenuOpen(false);
             }
+
+            // Close desktop search dropdown
+            if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target)) {
+                setSearchResults(null);
+            }
+
+            // Close mobile search dropdown
+            if (mobileSearchDropdownRef.current && !mobileSearchDropdownRef.current.contains(event.target)) {
+                setMobileSearchResults(null);
+            }
         };
 
         document.addEventListener('mousedown', handleClickOutside);
@@ -69,6 +88,8 @@ const Navbar = () => {
                 setShowRegions(false);
                 setOpenDropDown(false);
                 setMobileMenuOpen(false);
+                setSearchResults(null);
+                setMobileSearchResults(null);
             }
         };
 
@@ -100,22 +121,70 @@ const Navbar = () => {
     const toggleMobileMenu = useCallback((e) => {
         e.stopPropagation();
         setMobileMenuOpen(prev => !prev);
-    }, []);
+        // Clear mobile search when closing menu
+        if (mobileMenuOpen) {
+            setMobileSearchQuery('');
+            setMobileSearchResults(null);
+        }
+    }, [mobileMenuOpen]);
 
     const handleLogoClick = useCallback(() => {
         navigate('/');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [navigate]);
 
-    const handleSearchSubmit = useCallback((e) => {
+    // Desktop search handler
+    const handleSearchSubmit = useCallback(async (e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            // Add your search logic here
-            searchStock(searchQuery);
-            console.log('Searching for:', searchQuery);
-            // navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+            try {
+                const stocks = await searchStock(searchQuery);
+                // const news=await getMarketNews();
+                // console.log(news);
+                
+                console.log("Fetched stocks:", stocks);
+                if (Array.isArray(stocks)) {
+                    setSearchResults(stocks.slice(0,1));
+                } else {
+                    setSearchResults([]);
+                }
+            } catch (err) {
+                console.error("Error in search:", err);
+                setSearchResults([]);
+            }
         }
-    }, [searchQuery]);
+    }, [searchQuery, searchStock]);
+
+    // Mobile search handler
+    const handleMobileSearchSubmit = useCallback(async (e) => {
+        e.preventDefault();
+        if (mobileSearchQuery.trim()) {
+            try {
+                const stocks = await searchStock(mobileSearchQuery);
+                if (Array.isArray(stocks)) {
+                    setMobileSearchResults(stocks);
+                } else {
+                    setMobileSearchResults([]);
+                }
+            } catch (err) {
+                console.error("Error in mobile search:", err);
+                setMobileSearchResults([]);
+            }
+        }
+    }, [mobileSearchQuery, searchStock]);
+
+    // Handle stock selection from search results
+    const handleStockSelect = useCallback(async (stock) => {
+        // Navigate to stock detail page or handle selection
+        navigate(`/stock/${stock.symbol}`);
+
+        // navigate(`/stock/${stock.displaySymbol}`);
+        setSearchResults(null);
+        setMobileSearchResults(null);
+        setSearchQuery('');
+        setMobileSearchQuery('');
+        setMobileMenuOpen(false);
+    }, []);
 
     const handleProfileClick = useCallback(() => {
         navigate('/profile');
@@ -160,23 +229,52 @@ const Navbar = () => {
 
                 {/* Desktop Navigation */}
                 <div className='hidden md:flex gap-6 lg:gap-10 items-center'>
-                    {/* Search Bar */}
-                    <form onSubmit={handleSearchSubmit} className="relative group w-fit">
-                        <div className="relative z-10 bg-gray-800/50 backdrop-blur-sm flex flex-row items-center gap-2 px-4 py-2 rounded-full border border-gray-600/30 hover:border-gray-500/50 focus-within:border-gray-400/70 transition-all duration-200">
-                            <Search color="white" size={20} />
-                            <input
-                                className="w-full lg:w-[300px] xl:w-[400px] border-none outline-none bg-transparent text-white placeholder:text-gray-400 text-base lg:text-lg"
-                                type="text"
-                                placeholder="Search stocks (e.g., AAPL)"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                aria-label="Search stocks"
-                            />
-                        </div>
-                    </form>
+                    {/* Desktop Search Bar */}
+                    <div className="relative">
+                        <form onSubmit={handleSearchSubmit} className="relative group w-fit">
+                            <div className="relative z-10 bg-gray-800/50 backdrop-blur-sm flex flex-row items-center gap-2 px-4 py-2 rounded-full border border-gray-600/30 hover:border-gray-500/50 focus-within:border-gray-400/70 transition-all duration-200">
+                                <Search color="white" size={20} />
+                                <input
+                                    className="w-full lg:w-[300px] xl:w-[400px] border-none outline-none bg-transparent text-white placeholder:text-gray-400 text-base lg:text-lg"
+                                    type="text"
+                                    placeholder="Search stocks (e.g., AAPL)"
+                                    value={searchQuery.toUpperCase()}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    aria-label="Search stocks"
+                                />
+                            </div>
+                        </form>
 
-                    {/* Region Selector */}
-
+                        {/* Desktop Search Suggestions */}
+                        {searchResults && (
+                            <div ref={searchDropdownRef} className='absolute top-full left-0 right-0 mt-2 z-50 bg-gray-800/90 backdrop-blur-sm border border-gray-600/30 rounded-xl shadow-xl max-h-60 overflow-y-auto'>
+                                {
+                                    searchResults.length > 0 ? (
+                                        searchResults.map((result, idx) => (
+                                            <div
+                                                key={idx}
+                                                onClick={() => handleStockSelect(result)}
+                                                className="px-4 py-3 border-b border-gray-600/20 last:border-b-0 hover:bg-gray-600/30 focus:bg-gray-600/30 cursor-pointer transition-all duration-200"
+                                            >
+                                                <p className="font-semibold text-white text-sm">{result.displaySymbol}</p>
+                                                <p className="text-gray-400 text-xs mt-1 truncate">{result.description}</p>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="px-4 py-3 text-gray-400 text-sm">
+                                            Didn't find what you were looking for?{' '}
+                                            <span 
+                                                onClick={handleSearchInputClick}
+                                                className="text-blue-400 hover:text-blue-300 cursor-pointer underline"
+                                            >
+                                                Click here to find a stock's symbol
+                                            </span>
+                                        </div>
+                                    )
+                                }
+                            </div>
+                        )}
+                    </div>
 
                     {/* User Profile */}
                     {isLoggedIn ? (
@@ -233,48 +331,72 @@ const Navbar = () => {
                 <div className="md:hidden fixed inset-0 bg-black/95 backdrop-blur-md z-40" ref={mobileMenuRef}>
                     <div className="flex flex-col pt-16 px-6 space-y-4 h-full overflow-y-auto">
                         {/* Mobile Search */}
-                        <form onSubmit={handleSearchSubmit} className="w-full">
-                            <div className="bg-gray-800/60 backdrop-blur-sm flex flex-row items-center gap-3 px-4 py-3 rounded-xl border border-gray-600/40 focus-within:border-gray-500/60 transition-colors">
-                                <Search color="white" size={20} />
-                                <input
-                                    className="w-full border-none outline-none bg-transparent text-white placeholder:text-gray-400 text-base"
-                                    type="text"
-                                    placeholder="Search stocks..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    aria-label="Search stocks"
-                                />
-                            </div>
-                        </form>
+                        <div className="relative">
+                            <form onSubmit={handleMobileSearchSubmit} className="w-full">
+                                <div className="bg-gray-800/60 backdrop-blur-sm flex flex-row items-center gap-3 px-4 py-3 rounded-xl border border-gray-600/40 focus-within:border-gray-500/60 transition-colors">
+                                    <Search color="white" size={20} />
+                                    <input
+                                        className="w-full border-none outline-none bg-transparent text-white placeholder:text-gray-400 text-base"
+                                        type="text"
+                                        placeholder="Search stocks..."
+                                        value={mobileSearchQuery.toUpperCase()}
+                                        onChange={(e) => setMobileSearchQuery(e.target.value)}
+                                        aria-label="Search stocks"
+                                    />
+                                </div>
+                            </form>
 
-                        {/* Mobile Region Selector */}
+                            {/* Mobile Search Suggestions */}
+                            {mobileSearchResults && (
+                                <div ref={mobileSearchDropdownRef} className='absolute top-full left-0 right-0 mt-2 z-50 bg-gray-800/90 backdrop-blur-sm border border-gray-600/30 rounded-xl shadow-xl max-h-48 overflow-y-auto'>
+                                    {
+                                        mobileSearchResults.length > 0 ? (
+                                            mobileSearchResults.map((result, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    onClick={() => handleStockSelect(result)}
+                                                    className="px-4 py-3 border-b border-gray-600/20 last:border-b-0 hover:bg-gray-600/30 active:bg-gray-600/40 cursor-pointer transition-all duration-200"
+                                                >
+                                                    <p className="font-semibold text-white text-sm">{result.displaySymbol}</p>
+                                                    <p className="text-gray-400 text-xs mt-1 truncate">{result.description}</p>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="px-4 py-3 text-gray-400 text-sm">No results found.</div>
+                                        )
+                                    }
+                                </div>
+                            )}
+                        </div>
 
-
-                        {/* Mobile Auth */}
-                        {isLoggedIn ? (
-                            <>
+                        {/* Spacer to push auth buttons down when search results are showing */}
+                        <div className={`${mobileSearchResults ? 'mt-4' : ''}`}>
+                            {/* Mobile Auth */}
+                            {isLoggedIn ? (
+                                <>
+                                    <button
+                                        onClick={handleProfileClick}
+                                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-800/50 focus:bg-gray-800/50 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
+                                    >
+                                        <User size={20} color="white" />
+                                        <span className="text-white text-base font-medium">Profile</span>
+                                    </button>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="w-full flex items-center justify-center py-3 px-6 mt-3 rounded-xl border border-red-500/30 hover:border-red-400/50 hover:bg-red-800/20 focus:bg-red-800/20 cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-red-400/50"
+                                    >
+                                        <span className="text-red-300 text-base font-medium">Sign Out</span>
+                                    </button>
+                                </>
+                            ) : (
                                 <button
-                                    onClick={handleProfileClick}
-                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-800/50 focus:bg-gray-800/50 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
+                                    onClick={handleSignInClick}
+                                    className="w-full flex items-center justify-center py-3 px-6 mt-4 rounded-xl border border-gray-500/30 hover:border-gray-400/50 hover:bg-gray-800/30 focus:bg-gray-800/30 cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-white/50"
                                 >
-                                    <User size={20} color="white" />
-                                    <span className="text-white text-base font-medium">Profile</span>
+                                    <span className="text-white text-base font-medium">Sign In</span>
                                 </button>
-                                <button
-                                    onClick={handleLogout}
-                                    className="w-full flex items-center justify-center py-3 px-6 mt-2 rounded-xl border border-red-500/30 hover:border-red-400/50 hover:bg-red-800/20 focus:bg-red-800/20 cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-red-400/50"
-                                >
-                                    <span className="text-red-300 text-base font-medium">Sign Out</span>
-                                </button>
-                            </>
-                        ) : (
-                            <button
-                                onClick={handleSignInClick}
-                                className="w-full flex items-center justify-center py-3 px-6 mt-4 rounded-xl border border-gray-500/30 hover:border-gray-400/50 hover:bg-gray-800/30 focus:bg-gray-800/30 cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-white/50"
-                            >
-                                <span className="text-white text-base font-medium">Sign In</span>
-                            </button>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
