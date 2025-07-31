@@ -14,7 +14,7 @@ router.get("/quote/:symbol", verifyJWT ,getStockQuote);
 router.get("/profile/:symbol", verifyJWT ,getCompanyProfile);
 
 router.get("/company-news/:symbol", verifyJWT ,getCompanyNews); 
-router.get("/market-news", verifyJWT ,getMarketNews); 
+router.get("/market-news", getMarketNews); 
 
 router.get("/search", verifyJWT ,searchSymbols);
 

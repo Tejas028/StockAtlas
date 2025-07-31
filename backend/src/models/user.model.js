@@ -33,7 +33,17 @@ const userSchema = new Schema({
             type: Schema.Types.ObjectId,
             ref: 'Stock'
         }
-    ] // We will build in later section
+    ], // We will build in later section
+    emailVerificationToken: {
+        type: String,
+    },
+    emailVerificationTokenExpiry:{
+        type: Date,
+    },
+    isVerified:{
+        type: Boolean,
+        default: false,
+    }
 }, {timestamps: true})
 
 userSchema.pre("save", async function (next){
