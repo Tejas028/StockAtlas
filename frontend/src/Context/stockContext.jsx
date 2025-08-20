@@ -104,7 +104,7 @@ export const StockProvider = ({ children }) => {
             if(response.data.success){
                 // console.log(response.data.data.slice(0,10));
                 
-                return response.data.data.slice(0,10);
+                return response.data.data;
             }else{
                 toast.error(response.data.message || 'Company News not found!');
             }

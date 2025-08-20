@@ -41,6 +41,10 @@ const MarketNews = () => {
 
   const { getMarketNews } = useContext(StockContext);
 
+  const filteredNews = marketNews
+  .filter(news => news.image && news.image !== "https://static2.finnhub.io/file/publicdatany/finnhubimage/market_watch_logo.png")
+  .slice(0, 10);
+
   // Helper function to format timestamp
   const formatDate = (timestamp) => {
     const date = new Date(timestamp * 1000);
@@ -58,7 +62,7 @@ const MarketNews = () => {
       try {
         setLoading(true);
         const news = await getMarketNews();
-        console.log(news);
+        // console.log(news);
         setMarketNews(news);
       } catch (error) {
         console.error('Error fetching market news:', error);
@@ -93,9 +97,9 @@ const MarketNews = () => {
           <h1 className="text-4xl font-bold mb-2">Latest Market News</h1>
           <p className="text-gray-400">Stay updated with the latest financial news and market trends</p>
         </div>
-        
+
         <Slider {...settings}>
-          {marketNews.filter(news=>news.image!=="https://static2.finnhub.io/file/publicdatany/finnhubimage/market_watch_logo.png").map((news, index) => (
+          {marketNews.filter(news => news.image !== "https://static2.finnhub.io/file/publicdatany/finnhubimage/market_watch_logo.png").map((news, index) => (
             <div key={news.id || index} className="px-3">
               <div className="bg-gray-900 rounded-lg overflow-hidden shadow-xl h-full flex flex-col">
                 {/* News Image */}
@@ -116,7 +120,7 @@ const MarketNews = () => {
                     </div>
                   </div>
                 )}
-                
+
                 {/* News Content */}
                 <div className="p-4 flex-1 flex flex-col">
                   <div className="flex items-center justify-between mb-3">
@@ -125,17 +129,17 @@ const MarketNews = () => {
                       {formatDate(news.datetime)}
                     </span>
                   </div>
-                  
+
                   <h3 className="text-lg font-bold mb-3 leading-tight line-clamp-2 flex-1">
                     {news.headline}
                   </h3>
-                  
+
                   {news.summary && (
                     <p className="text-gray-300 text-sm leading-relaxed mb-4 line-clamp-3">
                       {news.summary}
                     </p>
                   )}
-                  
+
                   <div className="mt-auto">
                     <a
                       href={news.url}

@@ -21,10 +21,6 @@ export const AuthProvider = ({ children }) => {
             const email = formData.get("email");
             const password = formData.get("password");
 
-            console.log("username:", username);
-            console.log("email:", email);
-            console.log("password:", password);
-
             const isEmail = validator.isEmail(email);
             if (!isEmail) {
                 toast.error("Enter a valid email!");
@@ -105,12 +101,14 @@ export const AuthProvider = ({ children }) => {
                 setState('Sign Up')
                 return true;
             } else {
-                toast.error(response.data.message || "Logout failed");
+                toast.error("Logout failed");
                 return false;
             }
         } catch (error) {
             const message = error.response?.data?.message || error.message;
             toast.error(message);
+            console.log(error);
+            
             return false;
         }
     }
@@ -128,7 +126,7 @@ export const AuthProvider = ({ children }) => {
             return true;
         } catch (error) {
             const message = error.response?.data?.message || error.message;
-            toast.error("Session expired. Please login again.");
+            // toast.error("Session expired. Please login again.");
             return false;
         }
     };
@@ -154,10 +152,28 @@ export const AuthProvider = ({ children }) => {
         }
     }
 
+    const resendVerificationEmail=async(email)=>{
+        try {
+            const response = await axios.post('/api/v1/users/resend-verification-link', {email: email.trim()}); 
+
+            if (response.data.success) {
+                toast.success("Email verification link re-sent successfully");
+
+                return true;
+            } else {
+                toast.error(response.data.message || "Failed to resend link!");
+                return false;
+            }
+        } catch (error) {
+            const message = error.response?.data?.message || error.message;
+            toast.error(message);
+            return false;
+        }
+    }
+
     useEffect(() => {
         const fetchUser = async () => {
             const token = localStorage.getItem("accessToken");
-            // console.log("Fetched token on reload:", token);
             if (!token) return;
 
             try {
@@ -168,18 +184,17 @@ export const AuthProvider = ({ children }) => {
                 });
 
                 if (response.data.success) {
-                    // console.log(response.data.data);
                     setAuthUser(response.data.data);
                     setAccessToken(token);
                     setState("Sign In");
                 }
             } catch (err) {
+                // Handle expired or invalid token
                 if (err.response?.status === 401) {
-                    console.warn("Access token expired. Trying refresh...");
+                    console.warn("Token expired or unauthorized. Trying refresh...");
 
                     const success = await refreshAccessToken();
                     if (success) {
-                        // Retry fetching user after successful refresh
                         const retryToken = localStorage.getItem("accessToken");
 
                         try {
@@ -196,12 +211,12 @@ export const AuthProvider = ({ children }) => {
                                 return;
                             }
                         } catch (retryErr) {
-                            console.error("Retry failed after refresh:", retryErr.message);
+                            console.error("Retry after refresh failed:", retryErr.message);
                         }
                     }
                 }
 
-                // If everything fails, log out
+                // Final fallback if refresh also fails
                 console.error("User restore failed:", err.response?.data?.message || err.message);
                 localStorage.removeItem("accessToken");
                 localStorage.removeItem("refreshToken");
@@ -210,8 +225,9 @@ export const AuthProvider = ({ children }) => {
             }
         };
 
-        fetchUser();
+        fetchUser(); // Always try restoring on first mount
     }, []);
+
 
 
     useEffect(() => {
@@ -222,7 +238,8 @@ export const AuthProvider = ({ children }) => {
         register,
         state, setState,
         login, authUser,
-        logout, changePassword
+        logout, changePassword,
+        resendVerificationEmail
     }
 
     return (
