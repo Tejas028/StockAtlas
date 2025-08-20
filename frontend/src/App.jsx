@@ -9,6 +9,7 @@ import PoliciesAndSecurity from './Pages/PoliciesAndSecurity'
 import MeetTheDevelopers from './Pages/MeetTheDevelopers'
 import Stock from './Pages/Stock'
 import CompanyProfile from './Components/CompanyProfile'
+import VerifyEmail from './Pages/VerifyEmail'
 
 const App = () => {
   return (
@@ -23,6 +24,7 @@ const App = () => {
         <Route path='/meet-the-developers' element={<MeetTheDevelopers/>}></Route>
         <Route path='/stock/:symbol' element={<Stock/>}></Route>
         <Route path='/company/:symbol' element={<CompanyProfile/>}></Route>
+        <Route path='/verify-email' element={<VerifyEmail/>}></Route>
       </Routes>
     </div>
   )

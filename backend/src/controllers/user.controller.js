@@ -17,7 +17,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
         // console.log("RefreshToken in fucntion: ", refreshToken);
 
         user.refreshToken = refreshToken;
-        await user.save({validateBeforeSave: false});
+        await user.save({ validateBeforeSave: false });
 
         return { accessToken, refreshToken }
     } catch (error) {
@@ -33,12 +33,12 @@ const sendVerificationEmail = async (user, email) => {
     user.emailVerificationTokenExpiry = Date.now() + 1000 * 60 * 15 // 15 minutes
     await user.save({ validateBeforeSave: false });
 
-    const verificationUrl = `${process.env.CORS_ORIGIN}/verify-email?token=${verificationToken}&id=${user._id}`;
+    const verificationUrl = `${process.env.CORS_ORIGIN}/api/v1/users/verify-email?token=${verificationToken}&id=${user._id}`;
 
     await sendEmail(
-    email,
-    "Verify Your StockAtlas Account - Complete Registration",
-    `
+        email,
+        "Verify Your StockAtlas Account - Complete Registration",
+        `
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -390,7 +390,7 @@ const sendVerificationEmail = async (user, email) => {
                 </div>
                 
                 <div class="footer-content">
-                    © 2024 StockAtlas. All rights reserved.<br>
+                    © 2025 StockAtlas. All rights reserved.<br>
                     Professional market data and analysis platform.
                 </div>
                 
@@ -408,19 +408,18 @@ const sendVerificationEmail = async (user, email) => {
     );
 }
 
-const registerUser = asyncHandler(async (req, res) => { 
+const registerUser = asyncHandler(async (req, res) => {
     const { username, email, password } = req.body;
-
-    if(
+    if (
         [username, email, password].some((field) => field?.trim() === "")
-    ){
+    ) {
         throw new ApiError(400, "All fields are required");
     }
 
     const existedUser = await User.findOne({
-        $or: [{username}, {email}]
+        $or: [{ username }, { email }]
     })
-    if(existedUser){
+    if (existedUser) {
         throw new ApiError(409, "User with email or username already exist");
     }
 
@@ -438,60 +437,60 @@ const registerUser = asyncHandler(async (req, res) => {
     })
 
     const createdUser = await User.findById(user._id).select("-password -refreshToken");
-    if(!createdUser){
+    if (!createdUser) {
         throw new ApiError(500, "Something went wrong while registering user");
     }
 
     await sendVerificationEmail(user, email);
 
     return res
-    .status(201)
-    .json(
-        new ApiResponse(200, createdUser ,"User Registered Successfully")
-    )
+        .status(201)
+        .json(
+            new ApiResponse(200, createdUser, "User Registered Successfully")
+        )
 })
 
 const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
-    if(!email){
+    if (!email) {
         throw new ApiError(400, "Username or email is required");
     }
 
     const user = await User.findOne({
-        $or: [{email}]
+        $or: [{ email }]
     })
-    if(!user){
+    if (!user) {
         throw new ApiError(404, "User does not exist");
     }
 
     const isPasswordValid = await user.isPasswordCorrect(password);
-    if(!isPasswordValid){
+    if (!isPasswordValid) {
         throw new ApiError(401, "Invalid user credentials");
     }
 
-    if(!user.isVerified){
+    if (!user.isVerified) {
         throw new ApiError(403, "Please Verify your Email before logging in");
     }
 
-    const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id);
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
     // console.log("AccessToken: ", accessToken);
     // console.log("RefreshToken", refreshToken);
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
 
     return res
-    .status(200)
-    .cookie("accessToken", accessToken, cookieOptions)
-    .cookie("refreshToken", refreshToken, cookieOptions)
-    .json(
-        new ApiResponse(
-            200,
-            {
-                loggedInUser, accessToken, refreshToken
-            },
-            "User logged in Successfully"
+        .status(200)
+        .cookie("accessToken", accessToken, cookieOptions)
+        .cookie("refreshToken", refreshToken, cookieOptions)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    loggedInUser, accessToken, refreshToken
+                },
+                "User logged in Successfully"
+            )
         )
-    )
 })
 
 const logoutUser = asyncHandler(async (req, res) => {
@@ -502,39 +501,39 @@ const logoutUser = asyncHandler(async (req, res) => {
                 refreshToken: 1 // removes refreshToken field from DB
             }
         },
-        {new: true}
+        { new: true }
     )
 
     return res
-    .status(200)
-    .clearCookie("accessToken", cookieOptions)
-    .clearCookie("refreshToken", cookieOptions)
-    .json(
-        new ApiResponse(200, {}, "User Logged Out")
-    )
+        .status(200)
+        .clearCookie("accessToken", cookieOptions)
+        .clearCookie("refreshToken", cookieOptions)
+        .json(
+            new ApiResponse(200, {}, "User Logged Out")
+        )
 })
 
 const getCurrentUser = asyncHandler(async (req, res) => {
     return res
-    .status(200)
-    .json(
-        new ApiResponse(
-            200,
-            req.user,
-            "User Found Successfully"
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                req.user,
+                "User Found Successfully"
+            )
         )
-    )
 })
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
     // console.log(req.cookies);
-    
+
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
     // console.log(incomingRefreshToken);
-    
-    if(!incomingRefreshToken){
+
+    if (!incomingRefreshToken) {
         throw new ApiError(401, "Unauthorized Request", [
-            {code: "UNAUTHORIZED", shouldRefresh: false}
+            { code: "UNAUTHORIZED", shouldRefresh: false }
         ]);
     }
 
@@ -544,18 +543,18 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             process.env.REFRESH_TOKEN_SECRET
         )
         // console.log(decodedToken);
-        
+
         const user = await User.findById(decodedToken?._id);
-        
-        if(!user){
+
+        if (!user) {
             throw new ApiError(401, "Invalid Refresh Token", [
-                {code: "UNAUTHORIZED", shouldRefresh: false}
+                { code: "UNAUTHORIZED", shouldRefresh: false }
             ]);
         }
 
-        if(incomingRefreshToken !== user?.refreshToken){
+        if (incomingRefreshToken !== user?.refreshToken) {
             throw new ApiError(401, "Invalid Refresh Token", [
-               {code: "UNAUTHORIZED", shouldRefresh: false}
+                { code: "UNAUTHORIZED", shouldRefresh: false }
             ]);
         }
         const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user?._id);
@@ -563,19 +562,19 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         console.log("newRefreshToken: ", refreshToken);
 
         return res
-        .status(200)
-        .cookie("accessToken", accessToken, cookieOptions)
-        .cookie("refreshToken", refreshToken, cookieOptions)
-        .json(
-            new ApiResponse(
-                200,
-                {accessToken, refreshToken},
-                "Access Token Refreshed"
+            .status(200)
+            .cookie("accessToken", accessToken, cookieOptions)
+            .cookie("refreshToken", refreshToken, cookieOptions)
+            .json(
+                new ApiResponse(
+                    200,
+                    { accessToken, refreshToken },
+                    "Access Token Refreshed"
+                )
             )
-        )
     } catch (error) {
         throw new ApiError(401, error?.message || "Invalid Refresh Token", [
-            {code: "UNAUTHORIZED", shouldRefresh: false}
+            { code: "UNAUTHORIZED", shouldRefresh: false }
         ]);
     }
 })
@@ -585,28 +584,28 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user?._id);
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
-    if(!isPasswordCorrect){
+    if (!isPasswordCorrect) {
         throw new ApiError(400, "Invalid Password");
     }
 
     user.password = newPassword;
-    await user.save({validateBeforeSave: false});
+    await user.save({ validateBeforeSave: false });
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(
-            200,
-            {},
-            "Password changed Succesfully"
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                {},
+                "Password changed Succesfully"
+            )
         )
-    )
 })
 
 const verifyEmail = asyncHandler(async (req, res) => {
     const { token, id } = req.query;
 
-    if(!token || !id){
+    if (!token || !id) {
         throw new ApiError(400, "Invalid Verification Request");
     }
 
@@ -618,109 +617,106 @@ const verifyEmail = asyncHandler(async (req, res) => {
         emailVerificationTokenExpiry: { $gt: Date.now() },
     });
 
-    if(!user){
-        throw new ApiError(400, "Verification link is invalid or has expired");
+    if (!user) {
+        return res.redirect(`${process.env.FRONTEND_URL}/login?state=signup&verified=failed`);
     }
 
     user.isVerified = true;
     user.emailVerificationToken = undefined;
     user.emailVerificationTokenExpiry = undefined;
-
     await user.save({ validateBeforeSave: false });
 
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(200, {}, "Email Verified Successfully")
-    );
-})
+    return res.redirect(`${process.env.FRONTEND_URL}/login?state=login&verified=success`);
+
+});
+
 
 const updateUserDetails = asyncHandler(async (req, res) => {
     const { username, email } = req.body;
-    if(!username || !email){
+    if (!username || !email) {
         throw new ApiError(400, "Fields are required");
     }
 
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
-            $set:{
+            $set: {
                 username,
                 email
             }
         },
-        {new: true} // returns updated data
+        { new: true } // returns updated data
     ).select("-password")
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(
-            200,
-            user,
-            "Profile Details Updated Successfully"
-        )
-    );
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                user,
+                "Profile Details Updated Successfully"
+            )
+        );
 })
 
 const updateAvatar = asyncHandler(async (req, res) => {
     const avatarLocalPath = req.files?.avatar?.[0]?.path;
-    if(!avatarLocalPath){
+    if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar File is Missing");
     }
 
     const avatar = await uploadOnCloudinary(avatarLocalPath);
-    if(!avatar.url){
+    if (!avatar.url) {
         throw new ApiError(400, "Error while uploading on cloudinary");
     }
 
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
-            $set:{
+            $set: {
                 avatar: avatar.url
             }
         },
-        {new: true}
+        { new: true }
     ).select("-password")
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(
-            200,
-            user,
-            "Avatar Image Updated Successfully"
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                user,
+                "Avatar Image Updated Successfully"
+            )
         )
-    )
 })
 
 const resendEmailVerificationLink = asyncHandler(async (req, res) => {
     const { email } = req.body;
-    if(!email){
+    if (!email) {
         throw new ApiError(400, "Email is Required");
     }
 
-    const user = await User.findOne({email});
-    if(!user){
+    const user = await User.findOne({ email });
+    if (!user) {
         throw new ApiError(400, "User not Found");
     }
 
-    if(user.isVerified){
+    if (user.isVerified) {
         throw new ApiError(400, "Email is already verified");
     }
 
     await sendVerificationEmail(user, email);
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(
-            200,
-            {},
-            "Verification Link Resent Successfully"
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                {},
+                "Verification Link Resent Successfully"
+            )
         )
-    )
 })
 
 export {

@@ -69,10 +69,10 @@ const Profile = () => {
     changePassword(oldPass, newPass);
   }
 
-  useEffect(()=>{
-    if(authUser) console.log(authUser);
+  // useEffect(()=>{
+  //   if(authUser) console.log(authUser);
     
-  },[])
+  // },[])
 
   return (
     <div className="min-h-screen bg-gray-950 p-4 sm:p-6">

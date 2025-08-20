@@ -1,10 +1,13 @@
 import React, { useContext, useState, useCallback } from 'react'
 import { X, Upload, Eye, EyeOff } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { AuthContext } from '../Context/authContext'
+import { useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Form states
   const [photo, setPhoto] = useState(null)
@@ -21,6 +24,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false)
 
   const { register, state, setState, login } = useContext(AuthContext)
+
 
   // Form validation
   const validateForm = () => {
@@ -93,7 +97,7 @@ const Login = () => {
           setPassword('')
           setPhoto(null)
           setPhotoPreview(null)
-          navigate('/login')
+          navigate('/verify-email', { state: { email } })
         } else {
           setShowPassConditions(true)
         }
@@ -128,6 +132,28 @@ const Login = () => {
     setPhotoPreview(null)
   }, [state, setState])
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const stateParam = params.get("state");     // "login" or "signup"
+    const verified = params.get("verified");    // "success" or "failed"
+
+    if (stateParam === "login") {
+      setState("Sign In");
+    } else if (stateParam === "signup") {
+      setState("Sign Up");
+    }
+
+    // if (verified === "success") {
+    //   // You can show a toast or banner here
+    //   console.log("Email verified successfully!");
+    // } else if (verified === "failed") {
+    //   console.log("Verification failed. Please sign up again.");
+    // }
+    if (stateParam || verified) {
+      navigate("/login", { replace: true });
+    }
+  }, [location, navigate, setState]);
+
   return (
     <div className="min-h-screen relative">
       {/* Background Image */}
@@ -146,10 +172,10 @@ const Login = () => {
         <div className="w-full max-w-4xl">
           {/* Main Card */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
-            
+
             {/* Two Column Layout */}
             <div className="grid lg:grid-cols-2">
-              
+
               {/* Left Column - Branding */}
               <div className="bg-gradient-to-br from-blue-600/20 to-purple-600/20 p-8 lg:p-10 flex flex-col justify-center items-center text-center lg:min-h-[500px]">
                 {/* Logo */}
@@ -171,7 +197,7 @@ const Login = () => {
                     {state === 'Sign Up' ? 'Join StockAtlas Today' : 'Welcome Back'}
                   </h2>
                   <p className="text-gray-300 leading-relaxed">
-                    {state === 'Sign Up' 
+                    {state === 'Sign Up'
                       ? 'Start your journey in stock market analysis with powerful tools and insights.'
                       : 'Continue your investment journey with advanced market intelligence.'
                     }
@@ -182,14 +208,14 @@ const Login = () => {
               {/* Right Column - Form */}
               <div className="p-6 lg:p-8 flex flex-col justify-center">
                 <div className="max-w-sm mx-auto w-full">
-                  
+
                   {/* Form Header */}
                   <div className="text-center mb-6">
                     <h3 className="text-2xl font-bold text-white mb-2">
                       {state === 'Sign Up' ? 'Create Account' : 'Sign In'}
                     </h3>
                     <p className="text-gray-300 text-sm">
-                      {state === 'Sign Up' 
+                      {state === 'Sign Up'
                         ? 'Fill in your details to get started'
                         : 'Enter your credentials to continue'
                       }
@@ -205,7 +231,7 @@ const Login = () => {
 
                   {/* Form */}
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    
+
                     {/* Profile Photo Upload - Sign Up Only */}
                     {state === 'Sign Up' && (
                       <div className="flex justify-center mb-4">
@@ -331,8 +357,8 @@ const Login = () => {
                       disabled={isLoading}
                       className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-transparent transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     >
-                      {isLoading 
-                        ? (state === 'Sign Up' ? 'Creating...' : 'Signing In...') 
+                      {isLoading
+                        ? (state === 'Sign Up' ? 'Creating...' : 'Signing In...')
                         : (state === 'Sign Up' ? 'Create Account' : 'Sign In')
                       }
                     </button>
@@ -375,7 +401,7 @@ const Login = () => {
                   </p>
                 </div>
               </div>
-              
+
             </div>
           </div>
         </div>
