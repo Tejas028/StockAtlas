@@ -2,9 +2,9 @@ import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js"
+import { uploadOnCloudinary } from "../services/cloudinary.js"
 import { cookieOptions } from "../constants.js";
-import { sendEmail } from "../utils/sendEmail.js";
+import { sendEmail } from "../services/sendEmail.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
@@ -606,7 +606,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 const verifyEmail = asyncHandler(async (req, res) => {
     const { token, id } = req.query;
 
-    if(!token || !id){
+    if (!token || !id) {
         throw new ApiError(400, "Invalid Verification Request");
     }
 
@@ -618,22 +618,18 @@ const verifyEmail = asyncHandler(async (req, res) => {
         emailVerificationTokenExpiry: { $gt: Date.now() },
     });
 
-    if(!user){
-        throw new ApiError(400, "Verification link is invalid or has expired");
+    if (!user) {
+        return res.redirect(`${process.env.FRONTEND_URL}/login?state=signup&verified=failed`);
     }
 
     user.isVerified = true;
     user.emailVerificationToken = undefined;
     user.emailVerificationTokenExpiry = undefined;
-
     await user.save({ validateBeforeSave: false });
 
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(200, {}, "Email Verified Successfully")
-    );
-})
+    return res.redirect(`${process.env.FRONTEND_URL}/login?state=login&verified=success`);
+
+});
 
 const updateUserDetails = asyncHandler(async (req, res) => {
     const { username, email } = req.body;
