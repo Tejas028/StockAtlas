@@ -2,9 +2,9 @@ import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js"
+import { uploadOnCloudinary } from "../services/cloudinary.js"
 import { cookieOptions } from "../constants.js";
-import { sendEmail } from "../utils/sendEmail.js";
+import { sendEmail } from "../services/sendEmail.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 

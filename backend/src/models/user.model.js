@@ -28,12 +28,10 @@ const userSchema = new Schema({
     refreshToken: {
         type: String,
     },
-    portfolio: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: 'Stock'
-        }
-    ], // We will build in later section
+    portfolio: {
+        type: Schema.Types.ObjectId,
+        ref: "Portfolio"
+    },
     emailVerificationToken: {
         type: String,
     },
