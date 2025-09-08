@@ -20,4 +20,7 @@ app.use("/api/v1/users", userRouter);
 import stockRouter from "./routes/stock.routes.js";
 app.use("/api/v1/stocks", stockRouter);
 
+import portfolioRouter from "./routes/portfolio.routes.js"
+app.use("/api/v1/portfolio", portfolioRouter);
+
 export { app }

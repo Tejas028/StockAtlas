@@ -4,6 +4,7 @@ dotenv.config({path: './.env'});
 import connectDB from "./db/index.js";
 import { app } from "./app.js";
 
+import "./services/portfolio.service.js";
 
 connectDB()
 .then(() => {
