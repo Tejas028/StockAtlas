@@ -33,7 +33,7 @@ const sendVerificationEmail = async (user, email) => {
     user.emailVerificationTokenExpiry = Date.now() + 1000 * 60 * 15 // 15 minutes
     await user.save({ validateBeforeSave: false });
 
-    const verificationUrl = `${process.env.CORS_ORIGIN}/api/v1/users/verify-email?token=${verificationToken}&id=${user._id}`;
+    const verificationUrl = `${process.env.BACKEND_URL}/api/v1/users/verify-email?token=${verificationToken}&id=${user._id}`;
 
     await sendEmail(
         email,
@@ -618,7 +618,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
     });
 
     if (!user) {
-        return res.redirect(`${process.env.FRONTEND_URL}/login?state=signup&verified=failed`);
+        return res.redirect(`${process.env.CORS_ORIGIN}/login?state=signup&verified=failed`);
     }
 
     user.isVerified = true;
@@ -626,10 +626,9 @@ const verifyEmail = asyncHandler(async (req, res) => {
     user.emailVerificationTokenExpiry = undefined;
     await user.save({ validateBeforeSave: false });
 
-    return res.redirect(`${process.env.FRONTEND_URL}/login?state=login&verified=success`);
+    return res.redirect(`${process.env.CORS_ORIGIN}/login?state=login&verified=success`);
 
 });
-
 
 const updateUserDetails = asyncHandler(async (req, res) => {
     const { username, email } = req.body;
